@@ -3,127 +3,137 @@
  * Description: Create a Chatbot
  * Author: Ivy Li
  * Date: 27 September 2024
+ * Last Modified: 15 December 2024
  */
 
 import java.util.Scanner;
-
 import java.util.Random;
 
-
 /*
- * class conversation creates a chatbot that is able to mirror certain words in the response or uses canned responses.
+ * The Conversation class creates a chatbot that interacts with the user. 
  */
 class Conversation {
 
-  static String[] CannedResponse ={
-    "Mhm!",
-    "Interesting!",
-    "Tell me more about it"
-  };
+    private int rounds; //the number of rounds of chatting
+    private String[] input; //input of the user
+    private String[] transcript; //stores the entire chat
 
-  static String[][] Mirror ={
-    {"i", "you"},
-    {"me", "you"},
-    {"am", "are"},
-    {"you", "I"},
-    {"my", "your"},
-    {"your", "my"}
-  };
-  static int rounds;
-  static String imput[];
-  
-  public static void main(String[] arguments) {
-    BeginConversation();
-  }
+    //an arrary of canned responses
+    private static final String[] cannedResponse = {
+        "Mhm!",
+        "Interesting!",
+        "Wow sounds great!"
+    };
 
-  /*
-   * Ask user how many rounds and store it into rounds
-   * return the number of rounds
-   */
-  public static int Rounds() {
-    Scanner scanner = new Scanner(System.in);
-    System.out.println("How many rounds?");
-    int rounds = scanner.nextInt();
-    scanner.nextLine(); 
-    return rounds;
+    //an array of the the words that need to be mirrored
+    private static final String[][] mirrorRules = {
+      {"i", "you"},
+      {"me", "you"},
+      {"am", "are"},
+      {"you", "I"},
+      {"my", "your"},
+      {"your", "my"}
+    };
 
-  }
+    /**
+     * Constructor that takes rounds as input and initializes the arrays
+     * 
+     * @param rounds the number of rounds 
+     */
 
-  /*
-   * This method starts the conversation and store the conversation into transcript
-   * return nothing
-   */
-  public static void BeginConversation() {
-    int rounds = Rounds();
-    String[] transcript = new String[rounds]; 
-    Scanner scanner = new Scanner(System.in);
-    for (int i = 0; i < rounds; i++) {
-      // Scanner scanner = new Scanner(System.in);
-      System.out.println("You: ");
-      String imput = scanner.nextLine().toLowerCase(); 
-      String response = Response(imput, i);
-      transcript[i] = "You: " + imput + "\nBot: " + response;
-      System.out.println("Bot: " + response);
-      
+    public Conversation(int rounds) {
+        this.rounds = rounds;
+        this.input = new String[rounds];
+        this.transcript = new String[rounds];
     }
-    scanner.close();
-    Transcript(transcript);
-    
-  }
 
-  /*
-   * This method randomize canned response although it didn't really work
-   * returns CannedResponse[]
-   */
-  public static String CannedResponse(){
-    Random random = new Random();
-    int num = random.nextInt(3);
-    return CannedResponse[num];
-  }
-
-  /*
-   * This method is generated with the help of Chat GPT
-   * This method generates response and determine whether words should be mirrored or should print out a canned response.
-   * Returns userResponse
-   */
-  public static String Response(String userInput, int rounds){
-    String userResponse = mirroredResponse(userInput);
-    if (userResponse.equals(userInput)){
-      userResponse=CannedResponse [rounds % CannedResponse.length];
+    /**
+     * This method creates random canned response
+     * 
+     * @return a random canned response
+     */
+    public String getCannedResponse() {
+        Random random = new Random();
+        int num = random.nextInt(cannedResponse.length);
+        return cannedResponse[num];
     }
-    return userResponse;
 
-  }
-
-  /*
-   * This method is generated with the help of Chat GPT
-   * This method generates mirrored words
-   */
-  public static String mirroredResponse(String userInput){
-    String[] words = userInput.split(" "); 
+    /**
+     * Generates a response by either mirroring input or using a canned response.
+     *
+     * @param userInput The input of the user 
+     * @param round the number of rounds
+     * @return the generated response.
+     */
+    public String generateResponse(String userInput, int round) {
+        String[] words = userInput.split(" ");
         for (int i = 0; i < words.length; i++) {
-            for (String[] mirror : Mirror) {
-                if (words[i].equals(mirror[0])) {
-                    words[i] = mirror[1];
-                    break;
-                  }
-              }
-          }
-      return String.join(" ", words);
+            for (String[] rule: mirrorRules) {
+                if (words[i].equals(rule[0])) {
+                    words[i] = rule[1];
+                    String response = String.join(" ", words);
+                    transcript[round] = "You: " + userInput + "\nBot: " + response + "? Tell me more!";
+                    System.out.println("Bot: " + response + "? Tell me more!");
+                    return response;
+                }
+            }
+        }
+        String response = getCannedResponse();
+        transcript[round] = "You: " + userInput + "\nBot: " + response + "? Tell me more!";
+        System.out.println("Bot: " + response);
+
+        return String.join(" ", words);
     }
 
-/*
- * This method print out the transcript in the end
- * Returns nothing
- */
-public static void Transcript(String[] transcript ){
-  System.out.println("\nConversation Transcript:");
-  for(String entry: transcript){
-    System.out.println(entry);
-  }
-}
-  
+    /**
+     * Prints the entire conversation transcript
+     */
+    public void printTranscript() {
+        System.out.println("\nConversation Transcript:");
+        for (String entry: transcript) {
+            System.out.println(entry);
+        }
+    }
 
+    /**
+     * The main method allows the user to interact with chatbot
+     * 
+     * @param arguments
+     */
+    public static void main(String[] arguments) {
+        Scanner scanner = new Scanner(System.in);
+        int rounds = 0;
 
-  
+        //ask for number of rounds
+        while (true) {
+            System.out.println("How many rounds?");
+            try {
+                rounds = scanner.nextInt();
+                scanner.nextLine();
+                if (rounds <= 0) {
+                    System.out.println("Please enter a positive integer for the number of rounds.");
+                } else {
+                    break;
+                }
+            } catch (RuntimeException e) {
+                System.out.println("Invalid entry. Please enter a valid integer!");
+                scanner.nextLine();
+            }
+        }
+
+        System.out.println("Chatbot: Hello! What do you want to chat about?");
+        Conversation chatbot = new Conversation(rounds);
+
+        //Conversation starts 
+        for (int i = 0; i < rounds; i++) {
+            System.out.print("You: ");
+            String input = scanner.nextLine().toLowerCase();
+            chatbot.input[i] = input;
+            chatbot.generateResponse(input, i);
+        }
+        //Conversation ends and print out transcript
+        scanner.close();
+        chatbot.printTranscript();
+        System.out.println("Bot: Nice chatting with you! Goodbye!");
+    }
 }
